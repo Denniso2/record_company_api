@@ -1,7 +1,7 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models.aggregates import Count
 from rest_framework.viewsets import ModelViewSet
 from .models import Artist, Album, Track
-from django.db.models.aggregates import Count
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer
 
 # Create your views here.

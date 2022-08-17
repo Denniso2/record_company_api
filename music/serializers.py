@@ -3,7 +3,6 @@ import time
 from .models import Artist, Album, Track
 
 
-
 class TrackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Track
