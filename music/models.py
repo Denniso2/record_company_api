@@ -14,7 +14,7 @@ class Artist(models.Model):
     GENRE_TECHNO = 'T'
 
     GENRE_CHOICES = [
-        (GENRE_POP, 'Pop'),(GENRE_ROCK, 'Rock'),
+        (GENRE_POP, 'Pop'), (GENRE_ROCK, 'Rock'),
         (GENRE_METAL, 'Metal'), (GENRE_INDIE, 'Indie'),
         (GENRE_HOUSE, 'House'), (GENRE_TECHNO, 'Techno')
     ]
@@ -33,7 +33,7 @@ class Album(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     artist = models.ForeignKey(
-        Artist, on_delete=models.CASCADE)
+        Artist, on_delete=models.CASCADE, related_name='albums')
 
     def __str__(self) -> str:
         return self.title
@@ -48,9 +48,9 @@ class Track(models.Model):
     track_duration = models.CharField(
         max_length=255)  # Depending on use case DurationField may be appropriate
     artist = models.ForeignKey(
-        Artist, on_delete=models.CASCADE)
+        Artist, on_delete=models.CASCADE, related_name='tracks')
     album = models.ForeignKey(
-        Album, on_delete=models.RESTRICT)
+        Album, on_delete=models.RESTRICT, related_name='tracks')
 
     def __str__(self) -> str:
         return self.title
