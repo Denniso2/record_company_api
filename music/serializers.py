@@ -1,7 +1,9 @@
+from django.db import transaction
 from rest_framework import serializers
 import re
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from .models import Artist, Album, Track, Customer, Order
+from .signals import order_created
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -97,10 +99,18 @@ class CreateOrderSerializer(serializers.Serializer):
         raise serializers.ValidationError("Incorrect CVV format")
 
     def save(self):
-        # Do credit card logic here
-        print(self.validated_data)
-        customer = Customer.objects.get(
-            user_id=self.context['user_id'])
-        order = Order.objects.create(customer=customer)
+        with transaction.atomic():
+            sub_type = self.validated_data['subscription_type']
+            customer = Customer.objects.get(
+                user_id=self.context['user_id'])
+            now = date.today()
+            expiry = now + timedelta(days=30)
 
-#
+            # Do credit card logic here
+
+            order = Order.objects.create(customer=customer
+                , subscription_expiry_date=expiry)
+
+            order_created.send_robust(self.__class__, order=order)
+
+            return order

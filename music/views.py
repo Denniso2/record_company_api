@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
 
 from .models import Artist, Album, Track, Customer, Order
 from .permissions import IsAdminOrReadOnly
@@ -42,19 +43,23 @@ class TrackViewSet(ModelViewSet):
 class CustomerViewSet(ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser]
 
 
 class OrderViewSet(ModelViewSet):
     queryset = Order.objects.all()
+
+    def get_permissions(self):
+        if self.request.method in ['PATCH', 'DELETE']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
         serializer = CreateOrderSerializer(
             data=request.data,
             context={'user_id': self.request.user.id})
         serializer.is_valid(raise_exception=True)
-        order = serializer.save()
-        serializer = OrderSerializer(order)
+        serializer.save()
         return Response(serializer.data)
 
     def get_serializer_class(self):
