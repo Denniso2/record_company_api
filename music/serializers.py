@@ -1,6 +1,7 @@
 from rest_framework import serializers
-import time
-from .models import Artist, Album, Track
+import re
+from datetime import datetime
+from .models import Artist, Album, Track, Customer, Order
 
 
 class TrackSerializer(serializers.ModelSerializer):
@@ -10,7 +11,7 @@ class TrackSerializer(serializers.ModelSerializer):
 
     def validate_track_duration(self, value):
         try:
-            time.strptime(value, '%M:%S')
+            datetime.strptime(value, '%M:%S')
             return value
         except ValueError:
             raise serializers.ValidationError("Incorrect duration format")
@@ -31,7 +32,7 @@ class AlbumSerializer(serializers.ModelSerializer):
         model = Album
         fields = ['id', 'title', 'album_type', 'description', 'artist', 'tracks']
 
-    def select_album_type(self, album: Album):
+    def select_album_type(self, album):
         try:
             if not album.tracks_count:
                 return
@@ -43,3 +44,63 @@ class AlbumSerializer(serializers.ModelSerializer):
                 return 'Album'
         except AttributeError:
             return
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['id', 'orders']
+
+
+class CreateOrderSerializer(serializers.Serializer):
+    SUBSCRIPTION_MONTHLY = 'M'
+    SUBSCRIPTION_6_MONTH = 'H'  # From half year
+    SUBSCRIPTION_YEARLY = 'Y'
+
+    SUBSCRIPTION_CHOICES = [
+        (SUBSCRIPTION_MONTHLY, 'Monthly'),
+        (SUBSCRIPTION_6_MONTH, 'Semi annually'),
+        (SUBSCRIPTION_YEARLY, 'Annually')
+    ]
+
+    subscription_type = serializers.ChoiceField(choices=SUBSCRIPTION_CHOICES)
+    cc_number = serializers.CharField(max_length=19, write_only=True)
+    cc_expiry_date = serializers.CharField(max_length=5, write_only=True)
+    cc_holder_name = serializers.CharField(max_length=255, write_only=True)
+    cc_cvv = serializers.CharField(max_length=3, write_only=True)
+
+    def validate_cc_number(self, value):
+        if bool(re.match(r"\d{4}-\d{4}-\d{4}-\d{4}$", value)):
+            return value
+        raise serializers.ValidationError("Incorrect CC number format")
+
+    def validate_cc_expiry_date(self, value):
+        try:
+            expiry = datetime.strptime(value, '%m/%y')
+            now = datetime.now()
+            if expiry > now:
+                return value
+            else:
+                raise serializers.ValidationError("Card has expired")
+        except ValueError:
+            raise serializers.ValidationError("Incorrect duration format")
+
+    def validate_cc_cvv(self, value):
+        if bool(re.match(r"\d{3}$", value)):
+            return value
+        raise serializers.ValidationError("Incorrect CVV format")
+
+    def save(self):
+        # Do credit card logic here
+        print(self.validated_data)
+        customer = Customer.objects.get(
+            user_id=self.context['user_id'])
+        order = Order.objects.create(customer=customer)
+
+#

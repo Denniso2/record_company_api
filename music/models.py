@@ -5,6 +5,10 @@ from django.conf import settings
 # Create your models here.
 
 
+class Customer(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+
 class Artist(models.Model):
     GENRE_POP = 'P'
     GENRE_ROCK = 'R'
@@ -18,7 +22,7 @@ class Artist(models.Model):
         (GENRE_METAL, 'Metal'), (GENRE_INDIE, 'Indie'),
         (GENRE_HOUSE, 'House'), (GENRE_TECHNO, 'Techno')
     ]
-    name = models.CharField(max_length=31)
+    name = models.CharField(max_length=31, unique=True)
     description = models.TextField()  # Depending on use case CharField may be appropriate
     genre = models.CharField(max_length=1, choices=GENRE_CHOICES)
 
@@ -51,6 +55,7 @@ class Track(models.Model):
         Artist, on_delete=models.CASCADE, related_name='tracks')
     album = models.ForeignKey(
         Album, on_delete=models.RESTRICT, related_name='tracks')
+    # Recommended on_delete behaviour based on django documentation
 
     def __str__(self) -> str:
         return self.title
@@ -59,5 +64,7 @@ class Track(models.Model):
         ordering = ['title']
 
 
-class Customer(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+class Order(models.Model):
+    subscription_date = models.DateField(auto_now_add=True)
+    subscription_expiry_date = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='orders')
