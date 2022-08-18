@@ -100,11 +100,18 @@ class CreateOrderSerializer(serializers.Serializer):
 
     def save(self):
         with transaction.atomic():
+            if self.context['user_exists']:
+                raise serializers.ValidationError("Already subscribed")
             sub_type = self.validated_data['subscription_type']
+            now = date.today()
+            if sub_type == 'M':
+                expiry = now + timedelta(days=30)
+            elif sub_type == 'H':
+                expiry = now + timedelta(days=180)
+            elif sub_type == 'Y':
+                expiry = now + timedelta(days=365)  # 5 extra
             customer = Customer.objects.get(
                 user_id=self.context['user_id'])
-            now = date.today()
-            expiry = now + timedelta(days=30)
 
             # Do credit card logic here
 

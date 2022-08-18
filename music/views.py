@@ -1,12 +1,13 @@
 from django.db.models.aggregates import Count
+from django.contrib.auth.models import Group
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from .models import Artist, Album, Track, Customer, Order
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsSubscribed
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, CustomerSerializer, CreateOrderSerializer, OrderSerializer
 
 
@@ -33,7 +34,7 @@ class TrackViewSet(ModelViewSet):
     # pagination_class = DefaultPagination    # Optional pagination for tracks
     permission_classes = [IsAdminOrReadOnly]
 
-    @action(detail=True, methods=['GET'])
+    @action(detail=True, methods=['GET'], permission_classes=[IsSubscribed])
     def listen(self, request, pk):
         if self.get_queryset().filter(pk=pk).exists():
             return Response('{ “message”: “Here’s your music” }')
@@ -50,16 +51,20 @@ class OrderViewSet(ModelViewSet):
     queryset = Order.objects.all()
 
     def get_permissions(self):
-        if self.request.method in ['PATCH', 'DELETE']:
+        if self.request.method in ['GET', 'PUT', 'PATCH', 'DELETE']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
+        subscribed_group, created = Group.objects.get_or_create(name="Subscribed")
+        user_exists = request.user.groups.filter(name='Subscribed').exists()
         serializer = CreateOrderSerializer(
             data=request.data,
-            context={'user_id': self.request.user.id})
+            context={'user_id': self.request.user.id,
+                     'user_exists': user_exists})
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        self.request.user.groups.add(subscribed_group)
         return Response(serializer.data)
 
     def get_serializer_class(self):
