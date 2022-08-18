@@ -60,5 +60,4 @@ class Track(models.Model):
 
 
 class Customer(models.Model):
-    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    pass
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
