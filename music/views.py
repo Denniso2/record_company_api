@@ -3,6 +3,7 @@ from django.db.models.aggregates import Count
 from rest_framework.viewsets import ModelViewSet
 from .models import Artist, Album, Track
 from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer
+from .pagination import DefaultPagination
 
 # Create your views here.
 
@@ -22,3 +23,4 @@ class AlbumViewSet(ModelViewSet):
 class TrackViewSet(ModelViewSet):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
+    # pagination_class = DefaultPagination    # Optional pagination for tracks
