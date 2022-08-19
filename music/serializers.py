@@ -121,3 +121,27 @@ class CreateOrderSerializer(serializers.Serializer):
             order_created.send_robust(self.__class__, order=order)
 
             return order
+
+
+class SimpleArtistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Artist
+        fields = ['id', 'name', 'genre']
+
+
+class SimpleAlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Album
+        fields = ['id', 'title']
+
+
+class SimpleTrackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Track
+        fields = ['id', 'title', 'track_duration']
+
+
+
+class SearchSerializer(serializers.Serializer):
+    artist = SimpleArtistSerializer()
+    album = SimpleAlbumSerializer()

@@ -1,14 +1,18 @@
 from django.db.models.aggregates import Count
 from django.contrib.auth.models import Group
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from .models import Artist, Album, Track, Customer, Order
 from .permissions import IsAdminOrReadOnly, IsSubscribed
-from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, CustomerSerializer, CreateOrderSerializer, OrderSerializer
+from .serializers import ArtistSerializer, AlbumSerializer, TrackSerializer, \
+    CustomerSerializer, CreateOrderSerializer, OrderSerializer, SimpleAlbumSerializer, \
+    SimpleArtistSerializer, SimpleTrackSerializer
 
 
 # Create your views here.
@@ -42,7 +46,7 @@ class TrackViewSet(ModelViewSet):
 
 
 class CustomerViewSet(ModelViewSet):
-    queryset = Customer.objects.all()
+    queryset = Customer.objects.prefetch_related('orders').all()
     serializer_class = CustomerSerializer
     permission_classes = [IsAdminUser]
 
@@ -71,3 +75,18 @@ class OrderViewSet(ModelViewSet):
         if self.request.method == 'POST':
             return CreateOrderSerializer
         return OrderSerializer
+
+
+class SearchView(APIView):
+    def get(self, request):
+        search_query = self.request.query_params.get('search')
+        if search_query in [None, '']:
+            return Response('Provide search query in format ?search=', status.HTTP_400_BAD_REQUEST)
+        artists_queryset = Artist.objects.filter(name__icontains=search_query).all()
+        tracks_queryset = Track.objects.filter(title__icontains=search_query).all()
+        albums_queryset = Album.objects.filter(title__icontains=search_query).all()
+        artist_serializer = SimpleArtistSerializer(artists_queryset, many=True)
+        tracks_serializer = SimpleTrackSerializer(tracks_queryset, many=True)
+        albums_serializer = SimpleAlbumSerializer(albums_queryset, many=True)
+        return Response(
+            {'artists': artist_serializer.data, 'tracks': tracks_serializer.data, 'albums': albums_serializer.data})
