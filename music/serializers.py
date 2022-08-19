@@ -47,7 +47,7 @@ class AlbumSerializer(serializers.ModelSerializer):
     album_type = serializers.SerializerMethodField(
         method_name='select_album_type'
     )
-    artist = SimpleArtistSerializer()
+    #artist = SimpleArtistSerializer()
 
     class Meta:
         model = Album
