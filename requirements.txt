@@ -1,0 +1,5 @@
+django<4,>=3.2
+djangorestframework-simplejwt<5.3
+djangorestframework>=3.12,<3.13
+djoser<2.2
+psycopg2>=2.8.6,<2.9

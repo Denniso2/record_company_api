@@ -6,6 +6,24 @@ from .models import Artist, Album, Track, Customer, Order
 from .signals import order_created
 
 
+class SimpleArtistSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Artist
+        fields = ['id', 'name', 'genre']
+
+
+class SimpleAlbumSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Album
+        fields = ['id', 'title']
+
+
+class SimpleTrackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Track
+        fields = ['id', 'title', 'track_duration']
+
+
 class TrackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Track
@@ -29,6 +47,7 @@ class AlbumSerializer(serializers.ModelSerializer):
     album_type = serializers.SerializerMethodField(
         method_name='select_album_type'
     )
+    artist = SimpleArtistSerializer()
 
     class Meta:
         model = Album
@@ -55,6 +74,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    orders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Customer
         fields = ['id', 'orders']
@@ -116,30 +137,11 @@ class CreateOrderSerializer(serializers.Serializer):
             # Do credit card logic here
 
             order = Order.objects.create(customer=customer
-                , subscription_expiry_date=expiry)
+                                         , subscription_expiry_date=expiry)
 
             order_created.send_robust(self.__class__, order=order)
 
             return order
-
-
-class SimpleArtistSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Artist
-        fields = ['id', 'name', 'genre']
-
-
-class SimpleAlbumSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Album
-        fields = ['id', 'title']
-
-
-class SimpleTrackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Track
-        fields = ['id', 'title', 'track_duration']
-
 
 
 class SearchSerializer(serializers.Serializer):

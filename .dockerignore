@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.docker
+
+# Pycharm
+.idea
+
+# Python
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+.env/
+.venv/
+venv/
+
+# Sqlite
+
+db.sqlite3
+
+# Pipenv
+
+Pipfile
+Pipfile.lock

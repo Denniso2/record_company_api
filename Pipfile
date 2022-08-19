@@ -6,11 +6,12 @@ name = "pypi"
 [packages]
 django = "<4,>=3.2"
 djangorestframework = ">=3.12,<3.13"
-django-debug-toolbar = "<3.7"
 djoser = "<2.2"
 djangorestframework-simplejwt = "<5.3"
+mysqlclient = "<2.2"
 
 [dev-packages]
+django-debug-toolbar = "<3.7"
 
 [requires]
 python_version = "3.10"
