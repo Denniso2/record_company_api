@@ -26,7 +26,7 @@ services:
   db:
     image: postgres:14.5-alpine
     ports:
-      - "5432:5432"
+      - "5432:5432" # Only here to access the db outside docker for testing
     volumes:
       - dev-db-data:/var/lib/postgresql/data
     environment:
