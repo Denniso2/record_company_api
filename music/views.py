@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from .models import Artist, Album, Track, Customer, Order
@@ -45,7 +46,7 @@ class TrackViewSet(ModelViewSet):
         raise NotFound
 
 
-class CustomerViewSet(ModelViewSet):
+class CustomerView(ListAPIView):
     queryset = Customer.objects.prefetch_related('orders').all()
     serializer_class = CustomerSerializer
     permission_classes = [IsAdminUser]

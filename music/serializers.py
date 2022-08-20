@@ -38,6 +38,8 @@ class TrackSerializer(serializers.ModelSerializer):
 
 
 class ArtistSerializer(serializers.ModelSerializer):
+    tracks = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    albums = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = Artist
         fields = ['id', 'name', 'description', 'genre', 'albums', 'tracks']
@@ -47,7 +49,7 @@ class AlbumSerializer(serializers.ModelSerializer):
     album_type = serializers.SerializerMethodField(
         method_name='select_album_type'
     )
-    #artist = SimpleArtistSerializer()
+    tracks = SimpleTrackSerializer(many=True, read_only=True)
 
     class Meta:
         model = Album
@@ -142,8 +144,3 @@ class CreateOrderSerializer(serializers.Serializer):
             order_created.send_robust(self.__class__, order=order)
 
             return order
-
-
-class SearchSerializer(serializers.Serializer):
-    artist = SimpleArtistSerializer()
-    album = SimpleAlbumSerializer()
