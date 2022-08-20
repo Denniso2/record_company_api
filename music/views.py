@@ -56,7 +56,7 @@ class OrderViewSet(ModelViewSet):
     queryset = Order.objects.all()
 
     def get_permissions(self):
-        if self.request.method in ['GET', 'PUT', 'PATCH', 'DELETE']:
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
 
@@ -77,12 +77,23 @@ class OrderViewSet(ModelViewSet):
             return CreateOrderSerializer
         return OrderSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Order.objects.all()
+
+        customer_id = Customer.objects.only(
+            'id').get(user_id=user.id)
+        return Order.objects.filter(customer_id=customer_id)
+
 
 class SearchView(APIView):
     def get(self, request):
         search_query = self.request.query_params.get('search')
         if search_query in [None, '']:
             return Response('Provide search query in format ?search=', status.HTTP_400_BAD_REQUEST)
+        # Searching titles only
         artists_queryset = Artist.objects.filter(name__icontains=search_query).all()
         tracks_queryset = Track.objects.filter(title__icontains=search_query).all()
         albums_queryset = Album.objects.filter(title__icontains=search_query).all()
