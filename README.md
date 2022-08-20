@@ -27,3 +27,7 @@ Install record-company-api with docker-compose
 /customer/ is admin only
 
 /users/ see [djoser](https://djoser.readthedocs.io/en/latest/getting_started.html) documentation
+
+## Extra
+
+Requires a daily celery job to clean expired subscriptions from users
