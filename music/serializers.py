@@ -4,6 +4,7 @@ import re
 from datetime import datetime, date, timedelta
 from .models import Artist, Album, Track, Customer, Order
 from .signals import order_created
+from django.contrib.auth.models import Group
 
 
 class SimpleArtistSerializer(serializers.ModelSerializer):
@@ -123,7 +124,10 @@ class CreateOrderSerializer(serializers.Serializer):
 
     def save(self):
         with transaction.atomic():
-            if self.context['user_exists']:
+            user = self.context['user']
+            subscribed_group, created = Group.objects.get_or_create(name="Subscribed")
+            user_exists = user.groups.filter(name='Subscribed').exists()
+            if user_exists:
                 raise serializers.ValidationError("Already subscribed")
             sub_type = self.validated_data['subscription_type']
             now = date.today()
@@ -134,12 +138,14 @@ class CreateOrderSerializer(serializers.Serializer):
             elif sub_type == 'Y':
                 expiry = now + timedelta(days=365)  # 5 extra
             customer = Customer.objects.get(
-                user_id=self.context['user_id'])
+                user_id=user.id)
 
             # Do credit card logic here
 
             order = Order.objects.create(customer=customer
                                          , subscription_expiry_date=expiry)
+
+            user.groups.add(subscribed_group)
 
             order_created.send_robust(self.__class__, order=order)
 

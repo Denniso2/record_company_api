@@ -1,5 +1,4 @@
 from django.db.models.aggregates import Count
-from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -61,15 +60,11 @@ class OrderViewSet(ModelViewSet):
         return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
-        subscribed_group, created = Group.objects.get_or_create(name="Subscribed")
-        user_exists = request.user.groups.filter(name='Subscribed').exists()
         serializer = CreateOrderSerializer(
             data=request.data,
-            context={'user_id': self.request.user.id,
-                     'user_exists': user_exists})
+            context={'user': self.request.user})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        self.request.user.groups.add(subscribed_group)
         return Response(serializer.data)
 
     def get_serializer_class(self):
